@@ -1,23 +1,5 @@
 use crate::{Button, HandleRollResult, Payout, roll::Roll};
 
-pub struct PlayArea {
-    inner: Box<dyn BettingRule>,
-}
-impl PlayArea {
-    pub fn new(inner: impl BettingRule + 'static) -> Self {
-        Self {
-            inner: Box::new(inner),
-        }
-    }
-
-    pub fn handle_roll(&self, roll: &Roll, button: &Button) -> HandleRollResult {
-        self.inner.handle_roll(roll, button)
-    }
-    pub fn name(&self) -> String {
-        self.inner.name()
-    }
-}
-
 pub trait BettingRule {
     fn handle_roll(&self, roll: &Roll, button: &Button) -> HandleRollResult;
     fn name(&self) -> String;
@@ -26,6 +8,7 @@ pub trait BettingRule {
 pub struct PassLine;
 pub struct DontPass;
 pub struct Field;
+pub struct BigSix;
 
 impl BettingRule for PassLine {
     fn handle_roll(&self, roll: &Roll, button: &Button) -> HandleRollResult {
@@ -87,5 +70,19 @@ impl BettingRule for Field {
 
     fn name(&self) -> String {
         "Field".into()
+    }
+}
+
+impl BettingRule for BigSix {
+    fn handle_roll(&self, roll: &Roll, _: &Button) -> HandleRollResult {
+        match roll {
+            Roll::Six => HandleRollResult::Win(Payout::new(1, 1)),
+            Roll::Seven => HandleRollResult::Lose,
+            _ => HandleRollResult::NoEffect,
+        }
+    }
+
+    fn name(&self) -> String {
+        "Big Six".into()
     }
 }

@@ -34,7 +34,7 @@ impl Button {
 }
 
 struct Table {
-    playspots: Vec<PlayArea>,
+    playspots: Vec<TableLoc>,
     button: Button,
 }
 impl Table {
@@ -48,11 +48,12 @@ impl Table {
         let roll = roll_dice();
         println!("Roll: {}", &roll);
         for i in self.playspots.iter() {
-            match i.handle_roll(&roll, &self.button) {
+            let inner = i.inner();
+            match inner.handle_roll(&roll, &self.button) {
                 HandleRollResult::Win(payout) => {
-                    println!("{} Wins! Payout: {}", i.name(), payout)
+                    println!("{} Wins! Payout: {}", inner.name(), payout)
                 }
-                HandleRollResult::Lose => println!("{} Loses!", i.name()),
+                HandleRollResult::Lose => println!("{} Loses!", inner.name()),
                 _ => {}
             }
         }
@@ -89,11 +90,29 @@ impl Default for Table {
     fn default() -> Self {
         Self {
             playspots: vec![
-                PlayArea::new(PassLine),
-                PlayArea::new(DontPass),
-                PlayArea::new(Field),
+                TableLoc::PassLine,
+                TableLoc::DontPass,
+                TableLoc::Field,
+                TableLoc::BigSix,
             ],
             button: Button::Off,
+        }
+    }
+}
+
+enum TableLoc {
+    PassLine,
+    DontPass,
+    Field,
+    BigSix,
+}
+impl TableLoc {
+    fn inner(&self) -> Box<dyn BettingRule> {
+        match self {
+            TableLoc::PassLine => Box::new(PassLine),
+            TableLoc::DontPass => Box::new(DontPass),
+            TableLoc::Field => Box::new(Field),
+            TableLoc::BigSix => Box::new(BigSix),
         }
     }
 }
